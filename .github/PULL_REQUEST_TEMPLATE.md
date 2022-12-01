@@ -19,7 +19,7 @@ If there's any caveat to the work, known accepted issues or risk, list them here
 
 
 ### Pre-merge checklist
-- [ ] I have followed the [contributing checklist](https://github.com/xbowery/HEAP-telebot-workshop/blob/main/.github/CONTRIBUTING.md)
+- [ ] I have followed the [contributing checklist](https://github.com/xbowery/president_gu_bot/blob/main/.github/CONTRIBUTING.md)
 
 
 ### Dependencies and References
