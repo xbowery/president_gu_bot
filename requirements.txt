@@ -1,0 +1,4 @@
+python-telegram-bot
+python-dateutil
+python-dotenv
+pymongo
