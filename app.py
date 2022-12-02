@@ -151,13 +151,15 @@ def leaderboard(update: Update, context: CallbackContext):
     for i in range(count):
         user = top_users_cur[i]
 
-        first_name = user["First Name"] if user["First Name"] is not None else ""
+        first_name = user["First Name"] if user["First Name"] is not None \
+            else ""
         last_name = user["Last Name"] if user["Last Name"] is not None else ""
         username = "@" + \
             user["Username"] if user["Username"] is not None else "No username"
         pray_count = user["Pray Count"]
 
-        msg += f"{i+1}. {first_name} {last_name} ({username}): {pray_count} {'times' if pray_count > 1 else 'time'}\n"
+        msg += f"{i+1}. {first_name} {last_name} ({username}): {pray_count} \
+            {'times' if pray_count > 1 else 'time'}\n"
 
     update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
