@@ -31,25 +31,23 @@ PRAYER_DB = db["prayers"]
 
 
 def init_settings(update, context):
-    if "chat_settings" in context.chat_data:
-        return
-
     user = update.effective_user
 
     database_settings = USER_DB.find_one(
         {"_id": user.id}
     )
 
+    count = 0
+
     if (database_settings is not None):
-        context.chat_data["chat_settings"] = database_settings
-        return
+        count = database_settings["Pray Count"]
 
     chat_settings = {
         "_id": user.id,
         "First Name": user.first_name,
         "Last Name": user.last_name,
         "Username": user.username,
-        "Pray Count": 0
+        "Pray Count": count
     }
 
     context.chat_data["chat_settings"] = chat_settings
