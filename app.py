@@ -145,14 +145,16 @@ def leaderboard(update: Update, context: CallbackContext):
     count = USER_DB.estimated_document_count()
     if count > 10:
         count = 10
-    top_users_cur = USER_DB.find({"Pray Count": { "$gt": 0 }}).sort("Pray Count", pymongo.DESCENDING).limit(10)
+    top_users_cur = USER_DB.find({"Pray Count": {"$gt": 0}}).sort(
+        "Pray Count", pymongo.DESCENDING).limit(10)
 
     for i in range(count):
         user = top_users_cur[i]
 
         first_name = user["First Name"] if user["First Name"] is not None else ""
         last_name = user["Last Name"] if user["Last Name"] is not None else ""
-        username = "@" + user["Username"] if user["Username"] is not None else "No username"
+        username = "@" + \
+            user["Username"] if user["Username"] is not None else "No username"
         pray_count = user["Pray Count"]
 
         msg += f"{i+1}. {first_name} {last_name} ({username}): {pray_count} {'times' if pray_count > 1 else 'time'}\n"
