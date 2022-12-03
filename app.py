@@ -149,7 +149,7 @@ def leaderboard(update: Update, context: CallbackContext):
         "Pray Count", pymongo.DESCENDING).limit(10)
 
     for i in range(count):
-        user = top_users_cur[i]
+        user = top_users_cur.__getitem__(i)
 
         first_name = user["First Name"] if user["First Name"] is not None \
             else ""
@@ -159,7 +159,7 @@ def leaderboard(update: Update, context: CallbackContext):
         pray_count = user["Pray Count"]
 
         msg += f"{i+1}. {first_name} {last_name} ({username}): {pray_count} \
-            {'times' if pray_count > 1 else 'time'}\n"
+{'times' if pray_count > 1 else 'time'}\n"
 
     update.message.reply_text(msg)
 
