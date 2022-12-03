@@ -115,12 +115,12 @@ has been paid respects for a total of **{prayer_count}** times!"""
     if (prayer['Pray Count'] % 100 == 0):
         update.message.reply_text(
             f"""CONGRATULATIONS ON BEING THE PERSON \
-            WHO PRAYED FOR THE {prayer_count}TH TIME!""")
+WHO PRAYED FOR THE {prayer_count}TH TIME!""")
 
         update.message.reply_text(
             'President Jason Gu loves you many many. 😘😘😘')
-        update.message.reply_audio(audio=open('prize1.mp3', 'rb'))
-        update.message.reply_audio(audio=open('prize2.mp3', 'rb'))
+        update.message.reply_audio(audio=open('assets/prize1.mp3', 'rb'))
+        update.message.reply_audio(audio=open('assets/prize2.mp3', 'rb'))
 
     update_prayer_obj = {"$set": prayer}
     update_user_obj = {"$set": user_record}
