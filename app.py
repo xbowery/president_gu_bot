@@ -140,7 +140,7 @@ has been paid respects for a total of **{prayer_count}** times!"""
 
 def leaderboard(update: Update, context: CallbackContext):
     init_settings(update, context)
-    msg = "**Current Leaderboard (Top 10 Users):**\n\n"
+    msg = "Current Leaderboard (Top 10 Users):\n\n"
 
     count = USER_DB.estimated_document_count()
     if count > 10:
@@ -161,7 +161,7 @@ def leaderboard(update: Update, context: CallbackContext):
         msg += f"{i+1}. {first_name} {last_name} ({username}): {pray_count} \
             {'times' if pray_count > 1 else 'time'}\n"
 
-    update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+    update.message.reply_text(msg)
 
 
 def help(update: Update, context: CallbackContext):
