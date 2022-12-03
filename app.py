@@ -140,24 +140,28 @@ has been paid respects for a total of **{prayer_count}** times!"""
 
 def leaderboard(update: Update, context: CallbackContext):
     init_settings(update, context)
-    msg = "**Current Leaderboard (Top 10 Users):**\n\n"
+    msg = "Current Leaderboard (Top 10 Users):\n\n"
 
     count = USER_DB.estimated_document_count()
     if count > 10:
         count = 10
-    top_users_cur = USER_DB.find().sort("Pray Count", pymongo.DESCENDING)
+    top_users_cur = USER_DB.find({"Pray Count": {"$gt": 0}}).sort(
+        "Pray Count", pymongo.DESCENDING).limit(10)
 
     for i in range(count):
         user = top_users_cur[i]
 
-        first_name = user["First Name"] if user["First Name"] is not None else ""
+        first_name = user["First Name"] if user["First Name"] is not None \
+            else ""
         last_name = user["Last Name"] if user["Last Name"] is not None else ""
-        username = "@" + user["Username"] if user["Username"] is not None else "No username"
+        username = "@" + \
+            user["Username"] if user["Username"] is not None else "No username"
         pray_count = user["Pray Count"]
 
-        msg += f"{i+1}. {first_name} {last_name} ({username}): {pray_count} times\n"
+        msg += f"{i+1}. {first_name} {last_name} ({username}): {pray_count} \
+            {'times' if pray_count > 1 else 'time'}\n"
 
-    update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+    update.message.reply_text(msg)
 
 
 def help(update: Update, context: CallbackContext):
