@@ -164,6 +164,22 @@ def leaderboard(update: Update, context: CallbackContext):
     update.message.reply_text(msg)
 
 
+def individual_prayer(update: Update, context: CallbackContext):
+    init_settings(update, context)
+
+    user = update.effective_user
+
+    database_settings = USER_DB.find_one(
+        {"_id": user.id}
+    )
+
+    count = database_settings["Pray Count"]
+
+    msg = f"You have /pray-ed a total of <b>{count} times!</b> \n\n Keep /pray-ing!"
+
+    update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+
+
 def help(update: Update, context: CallbackContext):
     init_settings(update, context)
 
@@ -188,6 +204,7 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("pray", pray))
     dp.add_handler(CommandHandler("help", help))
+    dp.add_handler(CommandHandler("get_pray_count", individual_prayer))
     dp.add_handler(CommandHandler("leaderboard", leaderboard))
     dp.add_handler(MessageHandler(Filters.text, start))
 
