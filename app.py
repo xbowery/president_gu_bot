@@ -175,9 +175,9 @@ def individual_prayer(update: Update, context: CallbackContext):
 
     count = database_settings["Pray Count"]
 
-    msg = f"You have /pray-ed a total of {count} times! \n\n Keep /pray-ing!"
+    msg = f"You have /pray-ed a total of <b>{count} times!</b> \n\n Keep /pray-ing!"
 
-    update.message.reply_text(msg)
+    update.message.reply_text(msg, parse_mode=ParseMode.HTML)
 
 
 def help(update: Update, context: CallbackContext):
