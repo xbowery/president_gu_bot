@@ -1,14 +1,17 @@
+import json
 import os
 import logging
 import random
 import pymongo
+import requests
+import validators
 
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
 from telegram import Update, ParseMode
 from telegram.ext import (Updater, CommandHandler, MessageHandler,
-                          Filters, CallbackContext)
+                          ConversationHandler, Filters, CallbackContext)
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -21,13 +24,22 @@ load_dotenv("./.env")
 TOKEN = os.getenv("token")
 MONGOURL = os.getenv("mongourl")
 SECRETID = int(os.getenv("id"))
+USER1 = int(os.getenv("user1"))
+USER2 = int(os.getenv("user2"))
 NAME = os.getenv("name")
+API_URL = os.getenv("apiurl")
+API_KEY = os.getenv("apikey")
+MONGODB_NAME = os.getenv("database")
+MONGODB_DATASOURCE = os.getenv("dataSource")
 
 client = MongoClient(MONGOURL)
 db = client.jasonbot
 
+AUTHORISED_USERS = [SECRETID, USER1, USER2]
+
 USER_DB = db["user"]
 PRAYER_DB = db["prayers"]
+ASSETS_DB = db["assets"]
 
 
 def init_settings(update, context):
@@ -58,21 +70,23 @@ def init_settings(update, context):
 
 
 def start(update: Update, context: CallbackContext):
+    cursor = ASSETS_DB.find()
+
     if (update.message.chat_id == SECRETID):
         update.message.reply_text('Hi President Jason Gu Yao Chen')
-        file1 = "assets/pic1.jpg"
-        update.message.reply_photo(photo=open(file1, 'rb'))
+        file1 = cursor.__getitem__(0)["url"]
+        update.message.reply_photo(photo=str(file1))
         update.message.reply_text('All hail President Jason Gu Yao Chen')
-        file2 = "assets/pic2.jpg"
-        update.message.reply_photo(photo=open(file2, 'rb'))
+        file2 = cursor.__getitem__(1)["url"]
+        update.message.reply_photo(photo=str(file2))
     else:
         update.message.reply_text(
             'Hi, please pay your respects to our President Jason Gu Yao Chen.')
-        file1 = "assets/pic1.jpg"
-        update.message.reply_photo(photo=open(file1, 'rb'))
+        file1 = cursor.__getitem__(0)["url"]
+        update.message.reply_photo(photo=file1)
         update.message.reply_text('All hail President Jason Gu Yao Chen')
-        file2 = "assets/pic2.jpg"
-        update.message.reply_photo(photo=open(file2, 'rb'))
+        file2 = cursor.__getitem__(1)["url"]
+        update.message.reply_photo(photo=file2)
         update.message.reply_text(
             'Drop him a text @nineliejasongug on Telegram!')
 
@@ -94,12 +108,13 @@ def pray(update: Update, context: CallbackContext):
     prayer['Pray Count'] += 1
     prayer_count = prayer['Pray Count']
 
-    photo_dict = {1: 'pic1.jpg', 2: 'pic2.jpg', 3: 'pic3.jpg',
-                  4: 'pic4.jpg', 5: 'pic5.png', 6: 'pic6.png', 7: 'pic7.png'}
-    number = random.randint(1, len(photo_dict))
-    filename = 'assets/' + photo_dict[number]
+    count = ASSETS_DB.estimated_document_count()
+    cursor = ASSETS_DB.find()
 
-    update.message.reply_photo(photo=open(filename, 'rb'))
+    number = random.randint(0, count-1)
+    filename = cursor.__getitem__(number)["url"]
+
+    update.message.reply_photo(photo=filename)
 
     update.message.reply_text(
         'Thanks for paying your respects to our President Jason Gu Yao Chen.')
@@ -180,12 +195,68 @@ def individual_prayer(update: Update, context: CallbackContext):
     update.message.reply_text(msg, parse_mode=ParseMode.HTML)
 
 
+def init_add_pictures(update: Update, context: CallbackContext):
+    user = update.effective_user
+
+    if (user.id not in AUTHORISED_USERS):
+        return
+
+    msg = "Please send me a message containing the URL of the picture."
+
+    update.message.reply_text(msg)
+    return 1
+
+
+def add_pictures(update: Update, context: CallbackContext):
+    if (validators.url(update.message.text)):
+        headers = {
+            'Content-Type': 'application/json',
+            'Access-Control-Request-Headers': '*',
+            'api-key': API_KEY
+        }
+
+        payload = json.dumps({
+            "collection": "assets",
+            "database": MONGODB_NAME,
+            "dataSource": MONGODB_DATASOURCE,
+            "document": {
+                "url": update.message.text
+            }
+        })
+
+        response = requests.request("POST", API_URL, headers=headers, data=payload)
+        if (response.status_code == 201):
+            update.message.reply_text("Picture successfully added!")
+        else:
+            msg = "There is an error while inserting into the database. Please try again later."
+            update.message.reply_text(msg)
+
+        return ConversationHandler.END
+    else:
+        msg_one = "Sorry, you have entered an invalid URL."
+        msg_two = "Please send me a message containing the URL of the picture."
+        update.message.reply_text(msg_one)
+        update.message.reply_text(msg_two)
+        return 1
+
+
+def end(update, context):
+    chat_id = update.message.chat.id
+
+    context.bot.send_message(
+        chat_id=chat_id,
+        text="Action cancelled."
+    )
+    return ConversationHandler.END
+
+
 def help(update: Update, context: CallbackContext):
     init_settings(update, context)
 
     msg = """/start - Starts this bot
 /pray - Pay your respects to our President Jason Gu Yaochen
 /leaderboard - Displays the leaderboard for users who prayed the most
+/get_pray_count - Displays your individual /pray count
     """
 
     update.message.reply_text(msg)
@@ -200,6 +271,19 @@ def main():
     updater = Updater(TOKEN, use_context=True)
 
     dp = updater.dispatcher
+
+    add_pictures_conv = ConversationHandler(
+        entry_points=[CommandHandler("add_picture", init_add_pictures)],
+        states={
+            1: [
+                CommandHandler("end", end),
+                MessageHandler(Filters.text, add_pictures)
+            ],
+        },
+        fallbacks=[CommandHandler("end", end)],
+        allow_reentry=True
+    )
+    dp.add_handler(add_pictures_conv)
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("pray", pray))
