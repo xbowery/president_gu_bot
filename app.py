@@ -127,25 +127,25 @@ has been paid respects for a total of **{prayer_count}** times!"""
         msg,
         parse_mode=ParseMode.MARKDOWN)
 
+    update_prayer_obj = {"$set": prayer}
+    update_user_obj = {"$set": user_record}
+
+    PRAYER_DB.update_one(
+        {"_id": NAME},
+        update_prayer_obj,
+        upsert=True
+    )
+
+    USER_DB.update_one(
+        {"_id": user.id},
+        update_user_obj,
+        upsert=True
+    )
+
     if (prayer['Pray Count'] % 100 == 0):
         update.message.reply_text(
             f"""CONGRATULATIONS ON BEING THE PERSON \
 WHO PRAYED FOR THE {prayer_count}TH TIME!""")
-
-        update_prayer_obj = {"$set": prayer}
-        update_user_obj = {"$set": user_record}
-
-        PRAYER_DB.update_one(
-            {"_id": NAME},
-            update_prayer_obj,
-            upsert=True
-        )
-
-        USER_DB.update_one(
-            {"_id": user.id},
-            update_user_obj,
-            upsert=True
-        )
 
         update.message.reply_text(
             'President Jason Gu loves you many many. 😘😘😘')
