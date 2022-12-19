@@ -132,25 +132,25 @@ has been paid respects for a total of **{prayer_count}** times!"""
             f"""CONGRATULATIONS ON BEING THE PERSON \
 WHO PRAYED FOR THE {prayer_count}TH TIME!""")
 
+        update_prayer_obj = {"$set": prayer}
+        update_user_obj = {"$set": user_record}
+
+        PRAYER_DB.update_one(
+            {"_id": NAME},
+            update_prayer_obj,
+            upsert=True
+        )
+
+        USER_DB.update_one(
+            {"_id": user.id},
+            update_user_obj,
+            upsert=True
+        )
+
         update.message.reply_text(
             'President Jason Gu loves you many many. 😘😘😘')
         update.message.reply_audio(audio=open('assets/prize1.mp3', 'rb'))
         update.message.reply_audio(audio=open('assets/prize2.mp3', 'rb'))
-
-    update_prayer_obj = {"$set": prayer}
-    update_user_obj = {"$set": user_record}
-
-    PRAYER_DB.update_one(
-        {"_id": NAME},
-        update_prayer_obj,
-        upsert=True
-    )
-
-    USER_DB.update_one(
-        {"_id": user.id},
-        update_user_obj,
-        upsert=True
-    )
 
 
 def leaderboard(update: Update, context: CallbackContext):

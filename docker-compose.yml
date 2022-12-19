@@ -1,0 +1,6 @@
+services:
+  president_jason_bot:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
