@@ -36,6 +36,7 @@ client = MongoClient(MONGOURL)
 db = client.jasonbot
 
 AUTHORISED_USERS = [SECRETID, USER1, USER2]
+ACCEPTABLE_PLATFORMS = ["private"]
 
 USER_DB = db["user"]
 PRAYER_DB = db["prayers"]
@@ -70,6 +71,11 @@ def init_settings(update, context):
 
 
 def start(update: Update, context: CallbackContext):
+    init_settings(update, context)
+
+    if update.message.chat.type not in ACCEPTABLE_PLATFORMS:
+        return
+
     cursor = ASSETS_DB.find()
 
     if (update.message.chat_id == SECRETID):
@@ -90,11 +96,10 @@ def start(update: Update, context: CallbackContext):
         update.message.reply_text(
             'Drop him a text @nineliejasongug on Telegram!')
 
-    init_settings(update, context)
-
 
 def pray(update: Update, context: CallbackContext):
     init_settings(update, context)
+
     user = update.effective_user
 
     user_record = USER_DB.find_one(
@@ -107,25 +112,6 @@ def pray(update: Update, context: CallbackContext):
     )
     prayer['Pray Count'] += 1
     prayer_count = prayer['Pray Count']
-
-    count = ASSETS_DB.estimated_document_count()
-    cursor = ASSETS_DB.find()
-
-    number = random.randint(0, count-1)
-    filename = cursor.__getitem__(number)["url"]
-
-    update.message.reply_photo(photo=filename)
-
-    update.message.reply_text(
-        'Thanks for paying your respects to our President Jason Gu Yao Chen.')
-
-    msg = f"""Our LORD AND SUPREME LEADER, PRIDE OF SMU CS, \
-RIGHT HAND MAN OF YEOW LEONG, THE ONE AND ONLY PRESIDENT JASON GU YAOCHEN \
-has been paid respects for a total of **{prayer_count}** times!"""
-
-    update.message.reply_text(
-        msg,
-        parse_mode=ParseMode.MARKDOWN)
 
     update_prayer_obj = {"$set": prayer}
     update_user_obj = {"$set": user_record}
@@ -142,19 +128,43 @@ has been paid respects for a total of **{prayer_count}** times!"""
         upsert=True
     )
 
-    if (prayer['Pray Count'] % 100 == 0):
-        update.message.reply_text(
-            f"""CONGRATULATIONS ON BEING THE PERSON \
-WHO PRAYED FOR THE {prayer_count}TH TIME!""")
+    if update.message.chat.type in ACCEPTABLE_PLATFORMS:
+        count = ASSETS_DB.estimated_document_count()
+        cursor = ASSETS_DB.find()
+
+        number = random.randint(0, count-1)
+        filename = cursor.__getitem__(number)["url"]
+
+        update.message.reply_photo(photo=filename)
 
         update.message.reply_text(
-            'President Jason Gu loves you many many. 😘😘😘')
-        update.message.reply_audio(audio=open('assets/prize1.mp3', 'rb'))
-        update.message.reply_audio(audio=open('assets/prize2.mp3', 'rb'))
+            'Thanks for paying your respects to our President Jason Gu Yao Chen.')
+
+        msg = f"""Our LORD AND SUPREME LEADER, PRIDE OF SMU CS, \
+RIGHT HAND MAN OF YEOW LEONG, THE ONE AND ONLY PRESIDENT JASON GU YAOCHEN \
+has been paid respects for a total of **{prayer_count}** times!"""
+
+        update.message.reply_text(
+            msg,
+            parse_mode=ParseMode.MARKDOWN)
+
+        if (prayer['Pray Count'] % 100 == 0):
+            update.message.reply_text(
+                f"""CONGRATULATIONS ON BEING THE PERSON \
+WHO PRAYED FOR THE {prayer_count}TH TIME!""")
+
+            update.message.reply_text(
+                'President Jason Gu loves you many many. 😘😘😘')
+            update.message.reply_audio(audio=open('assets/prize1.mp3', 'rb'))
+            update.message.reply_audio(audio=open('assets/prize2.mp3', 'rb'))
 
 
 def leaderboard(update: Update, context: CallbackContext):
     init_settings(update, context)
+
+    if update.message.chat.type not in ACCEPTABLE_PLATFORMS:
+        return
+
     msg = "Current Leaderboard (Top 10 Users):\n\n"
 
     count = USER_DB.estimated_document_count()
@@ -182,6 +192,9 @@ def leaderboard(update: Update, context: CallbackContext):
 def individual_prayer(update: Update, context: CallbackContext):
     init_settings(update, context)
 
+    if update.message.chat.type not in ACCEPTABLE_PLATFORMS:
+        return
+
     user = update.effective_user
 
     database_settings = USER_DB.find_one(
@@ -197,6 +210,9 @@ def individual_prayer(update: Update, context: CallbackContext):
 
 def init_add_pictures(update: Update, context: CallbackContext):
     user = update.effective_user
+
+    if update.message.chat.type not in ACCEPTABLE_PLATFORMS:
+        return
 
     if (user.id not in AUTHORISED_USERS):
         return
@@ -243,6 +259,9 @@ def add_pictures(update: Update, context: CallbackContext):
 def end(update, context):
     chat_id = update.message.chat.id
 
+    if update.message.chat.type not in ACCEPTABLE_PLATFORMS:
+        return
+
     context.bot.send_message(
         chat_id=chat_id,
         text="Action cancelled."
@@ -252,6 +271,9 @@ def end(update, context):
 
 def help(update: Update, context: CallbackContext):
     init_settings(update, context)
+
+    if update.message.chat.type not in ACCEPTABLE_PLATFORMS:
+        return
 
     msg = """/start - Starts this bot
 /pray - Pay your respects to our President Jason Gu Yaochen
